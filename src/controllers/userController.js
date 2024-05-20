@@ -1,13 +1,37 @@
 import User from '../models/userModel.js';
+import Crypto from '../utils/crypto.js';
+import Regex from '../utils/regex.js';
 
 const createUser = async (req, res) => {
+
+  const name = req.body.name;
+  const age = req.body.age;
+  const street = req.body.street;
+  const neighborhood = req.body.neighborhood;
+  const state = req.body.state;
+  const bio = req.body.bio;
+  const photo = req.body.photo;
+  const email = req.body.email;
+  const password = req.body.password;
+
+  const regex = new Regex();
+  const isValid = regex.regexPass(password);
+  if (!isValid) return res.status(422).json({ error: 'Senha_inválida!' });
+  const isValidEmail = regex.regexEmail(email);
+  if (!isValidEmail) return res.status(422).json({ error: 'E-mail_inválido!' });
+
+  const crypto = new Crypto();
+  const passwordHash = await crypto.cryptPass(password);
   const data = {
-    name: req.body.name,
-    age: req.body.age,
-    street: req.body.street,
-    neighborhood: req.body.neighborhood,
-    state: req.body.state,
-    bio: req.body.bio,
+    name: name,
+    age: age,
+    street: street,
+    neighborhood: neighborhood,
+    state: state,
+    bio: bio,
+    photo: photo,
+    email: email,
+    password: passwordHash
   }
   try {
     const newUser = await User.create(data);
@@ -71,6 +95,9 @@ const editUser = async (req, res) => {
     neighborhood: req.body.neighborhood || user.neighborhood,
     state: req.body.state || user.state,
     bio: req.body.bio || user.bio,
+    photo: req.body.photo || user.photo,
+    email: user.email,
+    password: user.password
   }
   try {
     const updateUser = await User.update(data, { where: { id: idUser } });
